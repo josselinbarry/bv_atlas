@@ -1,5 +1,4 @@
-## VERSION FINALISEE AU 20230627
-## En cours d'ajout sur la partie analytique
+## VERSION FINALISEE AU 20230720
 
 # Library ----
 #library(plyr)
@@ -28,10 +27,10 @@ bv_bretagne <-
 
 ## Ajouter la longueur des tronçons----
 
-troncons_topage2 <- troncons_topage %>%
+troncons_topage <- troncons_topage %>%
   mutate(longueur = st_length(troncons_topage))
 
-## Ajouter la surface des BV----
+  ## Ajouter la surface des BV----
 
 bv_bretagne <- bv_bretagne %>%
   mutate(surface = st_area(bv_bretagne),
@@ -58,13 +57,15 @@ bv_bretagne <- bv_bretagne %>%
     (long_topag >= 10000 & long_topag <50000) ~ "Entre 10 et 50 km",
     (long_topag >= 50000 & long_topag <100000) ~ "Entre 50 et 100 km",
     (long_topag >= 100000 & long_topag <500000) ~ "Entre 100 et 500 km",
-    (long_topag >= 500000 & long_topag <1000000) ~ "Entre 500 et 1000 km"))
+    (long_topag >= 500000 & long_topag <1000000) ~ "Entre 500 et 1000 km", 
+    (long_topag >= 1000000 & long_topag <5000000) ~ "Entre 1000 et 5000 km",
+    (long_topag >= 5000000) ~ "Plus de 5000 km"))
 
 # Calcul des indicateurs ----
 
 ## Linéaire total de réseau ----
 
-lineaire_total <- troncons_topage2 %>%
+lineaire_total <- troncons_topage %>%
   sf::st_drop_geometry() %>% 
   select(CdOH, longueur) %>%
   as.data.frame() %>%
@@ -74,7 +75,7 @@ lineaire_total <- troncons_topage2 %>%
 
 ## Linéaire de réseau par rang de strahler ----
 
-lineaire_rang <- troncons_topage2 %>%
+lineaire_rang <- troncons_topage %>%
   sf::st_drop_geometry() %>% 
   select(CdOH, longueur, StreamOrde) %>%
   as.data.frame() %>%
@@ -86,9 +87,20 @@ lineaire_rang <- troncons_topage2 %>%
 openxlsx::write.xlsx(lineaire_rang,
                      file = "outputs/lineaire_hydro_strahler.xlsx")
 
+## Linéaire moyen et median par BV
+
+lineaire_median_moy <- bv_bretagne %>%
+  sf::st_drop_geometry() %>% 
+  select(IDD, surface, long_topag) %>%
+  filter(long_topag != 0) %>%
+  as.data.frame() %>%
+  summarise(lineaire_median = median(long_topag), 
+            lineaire_moyen = mean(long_topag))
+
+
 ## BV moyen et median
 
-bv_median_moy <- bv_bretagne2 %>%
+bv_median_moy <- bv_bretagne %>%
   sf::st_drop_geometry() %>% 
   select(IDD, surface, long_topag) %>%
   filter(long_topag != 0) %>%
@@ -119,8 +131,8 @@ lineaire_classe_bv <- bv_bretagne %>%
   group_by(classe_lineaire_bv) %>%
   summarise(nbre_BV = n())
 
-openxlsx::write.xlsx(surface_classe_bv,
-                     file = "outputs/surface_classe_bv.xlsx")
+openxlsx::write.xlsx(lineaire_classe_bv,
+                     file = "outputs/lineaire_classe_bv.xlsx")
 
 # Graph d'indicateurs          
 
