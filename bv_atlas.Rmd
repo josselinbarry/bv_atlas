@@ -1,0 +1,30 @@
+---
+title: "bv_atlas"
+author: "jo"
+date: "2023-07-26"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Chargement du package et des données
+
+```{r}
+library(tidyverse)
+library(sf)
+troncons_topage <- 
+  sf::read_sf(dsn = "data/TronconHydrographique_BV_cotiers_Bretagne_non_aqueduc_strahler.shp")
+
+bv_bretagne <- 
+  sf::read_sf(dsn = "data/bv_20230720_w_indicateurs.shp")
+```
+
+
+## Graphique
+
+```{r}
+histo_classe_lineaire_bv_permanent
+```
+
