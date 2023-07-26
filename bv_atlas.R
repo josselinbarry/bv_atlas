@@ -107,14 +107,18 @@ lineaire_permanent_total <- troncons_permanents %>%
 
 ## Linéaire de réseau par rang de strahler ----
 
-lineaire_rang <- troncons_topage %>%
+lineaire_topage_rang <- troncons_topage %>%
   sf::st_drop_geometry() %>% 
   select(CdOH, longueur_m, StreamOrde) %>%
   as.data.frame() %>%
   group_by(StreamOrde) %>%
   summarise(long_totale_m = sum(longueur_m), na.rm = T) %>%
-  mutate(long_totale_km = long_totale_m/1000) %>%
-  select(StreamOrde, long_totale_km)
+  mutate(long_totale_km = long_totale_m/1000,
+         long_totale_prct = long_totale_km*100/47804.4) %>%
+  select(StreamOrde, long_totale_km, long_totale_prct)
+
+openxlsx::write.xlsx(lineaire_topage_rang,
+                     file = "outputs/lineaire_topage_strahler.xlsx")
 
 lineaire_permanent_rang <- troncons_permanents %>%
   sf::st_drop_geometry() %>% 
@@ -122,22 +126,26 @@ lineaire_permanent_rang <- troncons_permanents %>%
   as.data.frame() %>%
   group_by(StreamOrde) %>%
   summarise(long_totale_m = sum(longueur_m), na.rm = T) %>%
-  mutate(long_totale_km = long_totale_m/1000) %>%
-  select(StreamOrde, long_totale_km)
+  mutate(long_totale_km = long_totale_m/1000,
+         long_totale_prct = long_totale_km*100/21567.02) %>%
+  select(StreamOrde, long_totale_km, long_totale_prct)
 
 
-openxlsx::write.xlsx(lineaire_rang,
+openxlsx::write.xlsx(lineaire_permanent_rang,
                      file = "outputs/lineaire_hydro_strahler.xlsx")
 
 ## Linéaire moyen et median par BV
 
-lineaire_median_moy_km <- bv_bretagne_topage %>%
+lineaire_topage_median_moy_km <- bv_bretagne_topage %>%
   sf::st_drop_geometry() %>% 
   select(IDD, long_topag) %>%
   as.data.frame() %>%
   summarise(lineaire_total_km = sum(long_topag/1000),
             lineaire_median_km = median(long_topag/1000), 
             lineaire_moyen_km = mean(long_topag/1000))
+
+openxlsx::write.xlsx(lineaire_topage_median_moy_km,
+                     file = "outputs/lineaire_topage_median_moyen.xlsx")
 
 lineaire_permanent_median_moy_km <- bv_bretagne_permanent %>%
   sf::st_drop_geometry() %>% 
@@ -146,6 +154,9 @@ lineaire_permanent_median_moy_km <- bv_bretagne_permanent %>%
   summarise(lineaire_total_km = sum(long_perma/1000),
             lineaire_median_km = median(long_perma/1000), 
             lineaire_moyen_km = mean(long_perma/1000))
+
+openxlsx::write.xlsx(lineaire_permanent_median_moy_km,
+                     file = "outputs/lineaire_permanent_median_moyen.xlsx")
 
 ## BV moyen et median
 
@@ -156,12 +167,18 @@ bv_median_moy_ha <- bv_bretagne_topage %>%
   summarise(surface_mediane_ha = median(surface_m/10000), 
             surface_moyenne_ha = mean(surface_m/10000))
 
+openxlsx::write.xlsx(bv_median_moy_ha,
+                     file = "outputs/bv_median_moy_ha.xlsx")
+
 bv_permanent_median_moy_ha <- bv_bretagne_permanent %>%
   sf::st_drop_geometry() %>% 
   select(IDD, surface_m) %>%
   as.data.frame() %>%
   summarise(surface_mediane_ha = median(surface_m/10000), 
             surface_moyenne_ha = mean(surface_m/10000))
+
+openxlsx::write.xlsx(bv_permanent_median_moy_ha,
+                     file = "outputs/bv_permanent_median_moy_ha.xlsx")
 
 ## Taux de drainage médian et moyen
 
@@ -172,12 +189,18 @@ tx_drainage_median_moy_km_km2 <- bv_bretagne_topage %>%
   summarise(tx_drainage_median_km_km2 = median((long_topag/1000)/(surface_m/1000000)), 
             tx_drainage_moyen_km_km2 = mean((long_topag/1000)/(surface_m/1000000)))
 
+openxlsx::write.xlsx(tx_drainage_median_moy_km_km2,
+                     file = "outputs/tx_drainage_median_moy_km_km2.xlsx")
+
 tx_drainage_permanent_median_moy_km_km2 <- bv_bretagne_permanent %>%
   sf::st_drop_geometry() %>% 
   select(IDD, surface_m, long_perma) %>%
   as.data.frame() %>%
   summarise(tx_drainage_median_km_km2 = median((long_perma/1000)/(surface_m/1000000)), 
             tx_drainage_moyen_km_km2 = mean((long_perma/1000)/(surface_m/1000000)))
+
+openxlsx::write.xlsx(tx_drainage_permanent_median_moy_km_km2,
+                     file = "outputs/tx_drainage_permanent_median_moy_km_km2.xlsx")
 
 ## Nombre de BV selon la classe de surface
 
@@ -219,6 +242,8 @@ histo_lineaire_rang <-
 
 histo_lineaire_rang
 
+## Linéaire de Topage permanent par rang de Strahler ----
+
 histo_lineaire_permanent_rang <-
   ggplot(data = troncons_permanents_strahler,
          aes(x = StreamOrde)) +  geom_bar(fill = "blue") +
@@ -240,6 +265,8 @@ histo_classe_surface_bv <-
 
 histo_classe_surface_bv
 
+## Bassins versant permanent selon leur surface ----
+
 histo_classe_surface_bv_permanent <-
   ggplot(data = bv_bretagne_permanent, 
          aes(x = surface_ha)) + geom_histogram() + scale_x_log10() + labs(
@@ -259,6 +286,8 @@ histo_classe_lineaire_bv <-
            title = "Répartition des bassins versant bretons selon leur linéaire hydrographique")
 
 histo_classe_lineaire_bv
+
+## Bassins versant selon leur linéaire hydrographique permanent ----
 
 histo_classe_lineaire_bv_permanent <-
   ggplot(data = bv_bretagne_permanent, 
@@ -280,6 +309,8 @@ histo_classe_tx_drainage_bv <-
 
 histo_classe_tx_drainage_bv
 
+## Bassins versant selon leur taux de drainage ----
+
 histo_classe_tx_drainage_bv_permanent <-
   ggplot(data = bv_bretagne_permanent, 
          aes(x = (long_perma/1000)/(surface_m/1000000))) + geom_histogram() + scale_x_log10() + labs(
@@ -291,7 +322,7 @@ histo_classe_tx_drainage_bv_permanent
 
 
 
-
+# variante foireuse
 lineaire_rang %>% 
   ggplot(data = lineaire_rang,
          aes(x = StreamOrde, y = long_totale_km)) +
