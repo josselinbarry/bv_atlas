@@ -27,7 +27,8 @@ bv_bretagne <-
 ## Ajouter la longueur des tronçons----
 
 troncons_topage <- troncons_topage %>%
-  mutate(longueur_m = st_length(troncons_topage))
+  mutate(longueur_m = st_length(troncons_topage)) %>%
+  mutate(longueur_m = as.numeric(longueur_m))
 
 ## Ecarter les tronçons intermittents ----
 
@@ -95,6 +96,8 @@ lineaire_topage_rang <- troncons_topage_strahler %>%
   summarise(long_totale_m = sum(longueur_m), na.rm = T) %>%
   mutate(long_totale_km = long_totale_m/1000,
          long_totale_prct = long_totale_km*100/47804.4) %>%
+  mutate(long_totale_km = as.numeric(long_totale_km),
+         long_totale_prct = as.numeric(long_totale_prct)) %>%
   select(StreamOrde, long_totale_km, long_totale_prct)
 
 openxlsx::write.xlsx(lineaire_topage_rang,
@@ -108,6 +111,8 @@ lineaire_permanent_rang <- troncons_permanents_strahler %>%
   summarise(long_totale_m = sum(longueur_m), na.rm = T) %>%
   mutate(long_totale_km = long_totale_m/1000,
          long_totale_prct = long_totale_km*100/21567.02) %>%
+  mutate(long_totale_km = as.numeric(long_totale_km),
+         long_totale_prct = as.numeric(long_totale_prct)) %>%
   select(StreamOrde, long_totale_km, long_totale_prct)
 
 
@@ -170,7 +175,7 @@ histo_lineaire_rang <-
   geom_bar(stat = "identity", fill = "blue") +
   labs(x = "Rang de Strahler",
        y = "Linéaire de réseau hydrographique",
-       title = str_wrap("Répartition du réseau hydrographique selon le rang de Strahler", width=60))
+       title = str_wrap("Répartition du réseau hydrographique selon le rang de Strahler", width=40))
 
 histo_lineaire_rang
 
@@ -184,7 +189,7 @@ histo_lineaire_permanent_rang <-
   geom_bar(stat = "identity", fill = "blue") +
   labs(x = "Rang de Strahler",
        y = "Linéaire de réseau hydrographique permanent",
-       title = str_wrap("Répartition du réseau hydrographique permanent selon le rang de Strahler", width=60))
+       title = str_wrap("Répartition du réseau hydrographique permanent selon le rang de Strahler", width=40))
 
 histo_lineaire_permanent_rang
 
@@ -197,7 +202,7 @@ histo_surface_bv <-
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + labs(
            x = "Surface du bassin versant (Hectares)",
            y = "Nombre de bassin versant",
-           title = str_wrap("Répartition des bassins versant bretons selon leur surface", width=60))
+           title = str_wrap("Répartition des bassins versant bretons selon leur surface", width=40))
 
 histo_surface_bv
 
@@ -210,7 +215,7 @@ histo_surface_bv_permanent <-
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Surface du bassin versant (Hectares)",
        y = "Nombre de bassin versant",
-       title = str_wrap("Répartition des bassins versant bretons selon leur surface", width=60))
+       title = str_wrap("Répartition des bassins versant bretons selon leur surface", width=40))
 
 histo_surface_bv_permanent
 
@@ -223,7 +228,7 @@ histo_lineaire_bv <-
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Longueur de cours d'eau BD Topage (Km)",
        y = "Nombre de bassin versant",
-       title = str_wrap("Répartition des bassins versant bretons selon leur linéaire hydrographique", width=60))
+       title = str_wrap("Répartition des bassins versant bretons selon leur linéaire hydrographique", width=40))
 
 histo_lineaire_bv
 
@@ -236,7 +241,7 @@ histo_lineaire_permanent_bv <-
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Longueur de cours d'eau BD Topage (Km)",
        y = "Nombre de bassin versant",
-       title = str_wrap("Répartition des bassins versant bretons selon leur linéaire hydrographique", width = 60))
+       title = str_wrap("Répartition des bassins versant bretons selon leur linéaire hydrographique", width = 40))
 
 histo_lineaire_permanent_bv
 
@@ -249,7 +254,7 @@ histo_tx_drainage_bv <-
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Taux de drainage du bassin versant (Km/Km²)",
        y = "Nombre de bassin versant",
-       title = str_wrap("Répartition des bassins versant bretons selon leur taux de drainage", width=60))
+       title = str_wrap("Répartition des bassins versant bretons selon leur taux de drainage", width=40))
 
 histo_tx_drainage_bv
 
@@ -262,7 +267,7 @@ histo_tx_drainage_bv_permanent <-
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Taux de drainage du bassin versant (Km/Km²)",
        y = "Nombre de bassin versant",
-       title = str_wrap("Répartition des bassins versant bretons selon leur taux de drainage", width=60))
+       title = str_wrap("Répartition des bassins versant bretons selon leur taux de drainage", width=40))
 
 histo_tx_drainage_bv_permanent
 

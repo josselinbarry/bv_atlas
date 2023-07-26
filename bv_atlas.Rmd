@@ -1,5 +1,5 @@
 ---
-title: "bv_atlas"
+title: "Analyse des caractéristiques géographiques du réseau hydrographique et des bassins versant côtiers bretons"
 author: "jo"
 date: "2023-07-26"
 output: word_document
@@ -9,22 +9,73 @@ output: word_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## Chargement du package et des données
+## Chargement des packages et des données
 
 ```{r}
 library(tidyverse)
 library(sf)
-troncons_topage <- 
-  sf::read_sf(dsn = "data/TronconHydrographique_BV_cotiers_Bretagne_non_aqueduc_strahler.shp")
-
-bv_bretagne <- 
-  sf::read_sf(dsn = "data/bv_20230720_w_indicateurs.shp")
+load(file = "outputs/bv_atlas.RData")
 ```
+## Analyse du réseau hydrographique
 
+Le réseau hydrographique breton issu de la BD Topage couvre un linéaire de 47804 km.
 
-## Graphique
+La distribution de ces tronçons selon l’ordination de Strahler est la suivante :
+```{r}
+lineaire_topage_rang
+```
+Si l'on écarte les tronçons indiqués comme "intermittent", ce linéaire est de 21567 km, qui se distribue selon l’ordination de Strahler de la manière suivante :
+```{r}
+lineaire_permanent_rang
+```
+## Analyse des bassins versant côtiers
+
+Ce linéaire hydrographique complet se réparti en 1751 fleuves côtiers (904 si l'on écarte les tronçons intermittents), de taille et de surface de bassin versant très variables :
+
+### Répartition selon la surface
+
+Si l'on considère le réseau hydrographique complet, la surface moyenne de ces 1751 bassins versants est de 1705 ha, pour une surface médiane de 70 ha.
+Ils se distribuent de la manière suivante :
 
 ```{r}
-histo_classe_lineaire_bv_permanent
+histo_surface_bv
 ```
 
+Si l'on écarte les tronçons intermittents, il subsiste 904 bassins versants, dont la surface moyenne est de 3243 ha, pour une surface médiane de 195 ha.
+Ils se distribuent de la manière suivante :
+
+```{r}
+histo_surface_bv_permanent
+```
+
+### Répartition selon le linéaire hydrographique
+
+Le réseau hydrographique complet de chacun de ces bassins a une longueur moyenne de 27,3 km et une longueur médiane de 0,9 km.
+La distribution des bassins versant selon la longueur de leur réseau hydrographique est la suivante :
+
+```{r}
+histo_lineaire_bv
+```
+
+Si l'on écarte les tronçons intermittents, la longueur moyenne de ce réseau hydrographique est de 23,9 km et sa longueur médiane 1,2 km.
+La distribution des bassins versant selon la longueur de leur réseau hydrographique est la suivante :
+
+```{r}
+histo_lineaire_permanent_bv
+```
+
+## Répartition selon le taux de drainage
+
+Le rapport de la longueur du réseau hydrographique sur la surface permet de calculer le taux de drainage d'un bassin versant.
+
+La répartition des 1751 bassins versants selon leur taux de drainage est la suivante :
+
+```{r}
+histo_tx_drainage_bv
+```
+
+Si l'on écarte les tronçons intermittents, la répartition des 904 bassins versants selon leur taux de drainage est la suivante :
+
+```{r}
+histo_tx_drainage_bv_permanent
+```
