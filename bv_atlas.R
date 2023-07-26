@@ -104,6 +104,30 @@ lineaire_permanent_total <- troncons_permanents %>%
   mutate(longueur_totale_km = longueur_totale_m/1000) %>%
   select(longueur_totale_km)
 
+## Linéaire total moyen et median par BV
+
+lineaire_topage_median_moy_km <- bv_bretagne_topage %>%
+  sf::st_drop_geometry() %>% 
+  select(IDD, long_topag) %>%
+  as.data.frame() %>%
+  summarise(lineaire_total_km = sum(long_topag/1000),
+            lineaire_median_km = median(long_topag/1000), 
+            lineaire_moyen_km = mean(long_topag/1000))
+
+openxlsx::write.xlsx(lineaire_topage_median_moy_km,
+                     file = "outputs/vf/1a_lineaire_topage_total_median_moyen.xlsx")
+
+lineaire_permanent_median_moy_km <- bv_bretagne_permanent %>%
+  sf::st_drop_geometry() %>% 
+  select(IDD, long_perma) %>%
+  as.data.frame() %>%
+  summarise(lineaire_total_km = sum(long_perma/1000),
+            lineaire_median_km = median(long_perma/1000), 
+            lineaire_moyen_km = mean(long_perma/1000))
+
+openxlsx::write.xlsx(lineaire_permanent_median_moy_km,
+                     file = "outputs/vf/1b_lineaire_permanent_total_median_moyen.xlsx")
+
 ## Linéaire de réseau par rang de strahler ----
 
 lineaire_topage_rang <- troncons_topage %>%
@@ -117,7 +141,7 @@ lineaire_topage_rang <- troncons_topage %>%
   select(StreamOrde, long_totale_km, long_totale_prct)
 
 openxlsx::write.xlsx(lineaire_topage_rang,
-                     file = "outputs/vf/lineaire_topage_strahler.xlsx")
+                     file = "outputs/vf/2a_lineaire_topage_strahler.xlsx")
 
 lineaire_permanent_rang <- troncons_permanents %>%
   sf::st_drop_geometry() %>% 
@@ -131,31 +155,7 @@ lineaire_permanent_rang <- troncons_permanents %>%
 
 
 openxlsx::write.xlsx(lineaire_permanent_rang,
-                     file = "outputs/vf/lineaire_hydro_strahler.xlsx")
-
-## Linéaire moyen et median par BV
-
-lineaire_topage_median_moy_km <- bv_bretagne_topage %>%
-  sf::st_drop_geometry() %>% 
-  select(IDD, long_topag) %>%
-  as.data.frame() %>%
-  summarise(lineaire_total_km = sum(long_topag/1000),
-            lineaire_median_km = median(long_topag/1000), 
-            lineaire_moyen_km = mean(long_topag/1000))
-
-openxlsx::write.xlsx(lineaire_topage_median_moy_km,
-                     file = "outputs/vf/lineaire_topage_total_median_moyen.xlsx")
-
-lineaire_permanent_median_moy_km <- bv_bretagne_permanent %>%
-  sf::st_drop_geometry() %>% 
-  select(IDD, long_perma) %>%
-  as.data.frame() %>%
-  summarise(lineaire_total_km = sum(long_perma/1000),
-            lineaire_median_km = median(long_perma/1000), 
-            lineaire_moyen_km = mean(long_perma/1000))
-
-openxlsx::write.xlsx(lineaire_permanent_median_moy_km,
-                     file = "outputs/vf/lineaire_permanent_total_median_moyen.xlsx")
+                     file = "outputs/vf/2b_lineaire_permanent_strahler.xlsx")
 
 ## BV moyen et median
 
@@ -167,7 +167,7 @@ bv_median_moy_ha <- bv_bretagne_topage %>%
             surface_moyenne_ha = mean(surface_m/10000))
 
 openxlsx::write.xlsx(bv_median_moy_ha,
-                     file = "outputs/vf/bv_median_moy_ha.xlsx")
+                     file = "outputs/vf/3a_bv_median_moy_ha.xlsx")
 
 bv_permanent_median_moy_ha <- bv_bretagne_permanent %>%
   sf::st_drop_geometry() %>% 
@@ -177,7 +177,7 @@ bv_permanent_median_moy_ha <- bv_bretagne_permanent %>%
             surface_moyenne_ha = mean(surface_m/10000))
 
 openxlsx::write.xlsx(bv_permanent_median_moy_ha,
-                     file = "outputs/vf/bv_permanent_median_moy_ha.xlsx")
+                     file = "outputs/vf/3b_bv_permanent_median_moy_ha.xlsx")
 
 ## Taux de drainage médian et moyen
 
@@ -189,7 +189,7 @@ tx_drainage_median_moy_km_km2 <- bv_bretagne_topage %>%
             tx_drainage_moyen_km_km2 = mean((long_topag/1000)/(surface_m/1000000)))
 
 openxlsx::write.xlsx(tx_drainage_median_moy_km_km2,
-                     file = "outputs/vf/tx_drainage_median_moy_km_km2.xlsx")
+                     file = "outputs/vf/4a_tx_drainage_median_moy_km_km2.xlsx")
 
 tx_drainage_permanent_median_moy_km_km2 <- bv_bretagne_permanent %>%
   sf::st_drop_geometry() %>% 
@@ -199,7 +199,7 @@ tx_drainage_permanent_median_moy_km_km2 <- bv_bretagne_permanent %>%
             tx_drainage_moyen_km_km2 = mean((long_perma/1000)/(surface_m/1000000)))
 
 openxlsx::write.xlsx(tx_drainage_permanent_median_moy_km_km2,
-                     file = "outputs/vf/tx_drainage_permanent_median_moy_km_km2.xlsx")
+                     file = "outputs/vf/4b_tx_drainage_permanent_median_moy_km_km2.xlsx")
 
 ## Nombre de BV selon la classe de surface
 
