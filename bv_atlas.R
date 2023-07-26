@@ -59,50 +59,7 @@ bv_bretagne_topage <- bv_bretagne %>%
 bv_bretagne_permanent <- bv_bretagne %>%
   filter(long_perma != 0)
 
-## Ajouter des classes de surface de BV----
-
-#bv_bretagne <- bv_bretagne %>%
-#  mutate(classe_taille_bv =  case_when(
-#    (surface > 0 & surface <1000000) ~ "Moins de 100 ha", 
-#    (surface > 1000000 & surface <5000000) ~ "Entre 100 et 500 ha",
-#    (surface > 5000000 & surface <10000000) ~ "Entre 500 et 1000 ha", 
-#    (surface > 10000000 & surface <50000000) ~ "Entre 1000 et 5000 ha",
-#    (surface > 50000000 & surface <100000000) ~ "Entre 5000 et 10000 ha",
-#    (surface > 100000000) ~ "Plus de 10000 ha"))
-
-## Ajouter des classes de linéaire 
-
-#bv_bretagne <- bv_bretagne %>%
-#  mutate(classe_lineaire_bv = case_when(
-#    (long_topag <1000) ~ "Entre 0 et 1 km", 
-#    (long_topag >= 1000 & long_topag <5000) ~ "Entre 1 et 5 km",
-#    (long_topag >= 5000 & long_topag <10000) ~ "Entre 5 et 10 km", 
-#    (long_topag >= 10000 & long_topag <50000) ~ "Entre 10 et 50 km",
-#    (long_topag >= 50000 & long_topag <100000) ~ "Entre 50 et 100 km",
-#    (long_topag >= 100000 & long_topag <500000) ~ "Entre 100 et 500 km",
-#    (long_topag >= 500000 & long_topag <1000000) ~ "Entre 500 et 1000 km", 
-#    (long_topag >= 1000000 & long_topag <5000000) ~ "Entre 1000 et 5000 km",
-#    (long_topag >= 5000000) ~ "Plus de 5000 km"))
-
 # Calcul des indicateurs ----
-
-## Linéaire total de réseau ----
-
-lineaire_total <- troncons_topage %>%
-  sf::st_drop_geometry() %>% 
-  select(CdOH, longueur_m) %>%
-  as.data.frame() %>%
-  summarise(longueur_totale_m = sum(longueur_m)) %>%
-  mutate(longueur_totale_km = longueur_totale_m/1000) %>%
-  select(longueur_totale_km)
-
-lineaire_permanent_total <- troncons_permanents %>%
-  sf::st_drop_geometry() %>% 
-  select(CdOH, longueur_m) %>%
-  as.data.frame() %>%
-  summarise(longueur_totale_m = sum(longueur_m)) %>%
-  mutate(longueur_totale_km = longueur_totale_m/1000) %>%
-  select(longueur_totale_km)
 
 ## Linéaire total moyen et median par BV
 
@@ -130,7 +87,7 @@ openxlsx::write.xlsx(lineaire_permanent_median_moy_km,
 
 ## Linéaire de réseau par rang de strahler ----
 
-lineaire_topage_rang <- troncons_topage %>%
+lineaire_topage_rang <- troncons_topage_strahler %>%
   sf::st_drop_geometry() %>% 
   select(CdOH, longueur_m, StreamOrde) %>%
   as.data.frame() %>%
@@ -143,7 +100,7 @@ lineaire_topage_rang <- troncons_topage %>%
 openxlsx::write.xlsx(lineaire_topage_rang,
                      file = "outputs/vf/2a_lineaire_topage_strahler.xlsx")
 
-lineaire_permanent_rang <- troncons_permanents %>%
+lineaire_permanent_rang <- troncons_permanents_strahler %>%
   sf::st_drop_geometry() %>% 
   select(CdOH, longueur_m, StreamOrde) %>%
   as.data.frame() %>%
@@ -201,132 +158,137 @@ tx_drainage_permanent_median_moy_km_km2 <- bv_bretagne_permanent %>%
 openxlsx::write.xlsx(tx_drainage_permanent_median_moy_km_km2,
                      file = "outputs/vf/4b_tx_drainage_permanent_median_moy_km_km2.xlsx")
 
-## Nombre de BV selon la classe de surface
-
-#surface_classe_bv <- bv_bretagne %>%
-#  sf::st_drop_geometry() %>% 
-#  select(IDD, long_topag, classe_taille_bv) %>%
-#  filter(long_topag != 0) %>%
-#  as.data.frame() %>%
-#  group_by(classe_taille_bv) %>%
-#  summarise(nbre_BV = n())
-
-#openxlsx::write.xlsx(surface_classe_bv,
-#                     file = "outputs/surface_classe_bv.xlsx")
-
-## Nombre de BV selon la classe de linéaire
-
-#lineaire_classe_bv <- bv_bretagne %>%
-#  sf::st_drop_geometry() %>% 
-#  select(IDD, long_topag, classe_lineaire_bv) %>%
-#  filter(long_topag != 0) %>%
-#  as.data.frame() %>%
-#  group_by(classe_lineaire_bv) %>%
-#  summarise(nbre_BV = n())
-
-#openxlsx::write.xlsx(lineaire_classe_bv,
-#                     file = "outputs/lineaire_classe_bv.xlsx")
-
 # Graph d'indicateurs  
 
 ## Linéaire de Topage par rang de Strahler ----
 
 histo_lineaire_rang <-
-  ggplot(data = troncons_topage_strahler,
-         aes(x = StreamOrde)) +  geom_bar(fill = "blue") +
-  coord_flip() + labs(
-           x = "Rang de Strahler",
-           y = "Linéaire de réseau hydrographique",
-           title = "Répartition du linéaire de réseau hydrographique selon le rang de Strahler")
+  ggplot(data = lineaire_topage_rang %>% 
+           mutate(long_totale_km = as.numeric(long_totale_km)),
+         aes(x = StreamOrde,
+             y = long_totale_km)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "Rang de Strahler",
+       y = "Linéaire de réseau hydrographique",
+       title = str_wrap("Répartition du réseau hydrographique selon le rang de Strahler", width=60))
 
 histo_lineaire_rang
 
 ## Linéaire de Topage permanent par rang de Strahler ----
 
 histo_lineaire_permanent_rang <-
-  ggplot(data = troncons_permanents_strahler,
-         aes(x = StreamOrde)) +  geom_bar(fill = "blue") +
-  coord_flip() + labs(
-    x = "Rang de Strahler",
-    y = "Linéaire de réseau hydrographique",
-    title = "Répartition du linéaire de réseau hydrographique selon le rang de Strahler")
+  ggplot(data = lineaire_permanent_rang %>% 
+           mutate(long_totale_km = as.numeric(long_totale_km)),
+         aes(x = StreamOrde,
+             y = long_totale_km)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "Rang de Strahler",
+       y = "Linéaire de réseau hydrographique permanent",
+       title = str_wrap("Répartition du réseau hydrographique permanent selon le rang de Strahler", width=60))
 
 histo_lineaire_permanent_rang
 
 ## Bassins versant selon leur surface ----
 
-histo_classe_surface_bv <-
+histo_surface_bv <-
   ggplot(data = bv_bretagne_topage, 
-         aes(x = surface_ha)) + geom_histogram() + scale_x_log10() + labs(
+         aes(x = surface_ha)) + 
+  geom_histogram(fill="blue") + 
+  scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + labs(
            x = "Surface du bassin versant (Hectares)",
            y = "Nombre de bassin versant",
-           title = "Répartition des bassins versant bretons selon leur taille")
+           title = str_wrap("Répartition des bassins versant bretons selon leur surface", width=60))
 
-histo_classe_surface_bv
+histo_surface_bv
 
 ## Bassins versant permanent selon leur surface ----
 
-histo_classe_surface_bv_permanent <-
+histo_surface_bv_permanent <-
   ggplot(data = bv_bretagne_permanent, 
-         aes(x = surface_ha)) + geom_histogram() + scale_x_log10() + labs(
-           x = "Surface du bassin versant (Hectares)",
-           y = "Nombre de bassin versant",
-           title = "Répartition des bassins versant bretons selon leur taille")
+         aes(x = surface_ha)) + 
+  geom_histogram(fill = "blue") + 
+  scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
+  labs(x = "Surface du bassin versant (Hectares)",
+       y = "Nombre de bassin versant",
+       title = str_wrap("Répartition des bassins versant bretons selon leur surface", width=60))
 
-histo_classe_surface_bv_permanent
+histo_surface_bv_permanent
 
 ## Bassins versant selon leur linéaire hydrographique ----
 
-histo_classe_lineaire_bv <-
+histo_lineaire_bv <-
   ggplot(data = bv_bretagne_topage, 
-         aes(x = long_topag/1000)) + geom_histogram() + scale_x_log10() + labs(
-           x = "Longueur de cours d'eau BD Topage (Km)",
-           y = "Nombre de bassin versant",
-           title = "Répartition des bassins versant bretons selon leur linéaire hydrographique")
+         aes(x = long_topag/1000)) + 
+  geom_histogram(fill = "blue") + 
+  scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
+  labs(x = "Longueur de cours d'eau BD Topage (Km)",
+       y = "Nombre de bassin versant",
+       title = str_wrap("Répartition des bassins versant bretons selon leur linéaire hydrographique", width=60))
 
-histo_classe_lineaire_bv
+histo_lineaire_bv
 
 ## Bassins versant selon leur linéaire hydrographique permanent ----
 
-histo_classe_lineaire_bv_permanent <-
+histo_lineaire_permanent_bv <-
   ggplot(data = bv_bretagne_permanent, 
-         aes(x = long_perma/1000)) + geom_histogram() + scale_x_log10() + labs(
-           x = "Longueur de cours d'eau BD Topage (Km)",
-           y = "Nombre de bassin versant",
-           title = "Répartition des bassins versant bretons selon leur linéaire hydrographique")
+         aes(x = long_perma/1000)) + 
+  geom_histogram(fill = "blue") + 
+  scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
+  labs(x = "Longueur de cours d'eau BD Topage (Km)",
+       y = "Nombre de bassin versant",
+       title = str_wrap("Répartition des bassins versant bretons selon leur linéaire hydrographique", width = 60))
 
-histo_classe_lineaire_bv_permanent
+histo_lineaire_permanent_bv
 
 ## Bassins versant selon leur taux de drainage ----
 
-histo_classe_tx_drainage_bv <-
+histo_tx_drainage_bv <-
   ggplot(data = bv_bretagne_topage, 
-         aes(x = (long_topag/1000)/(surface_m/1000000))) + geom_histogram() + scale_x_log10() + labs(
-           x = "Taux de drainage du bassin versant (Km/Km²)",
-           y = "Nombre de bassin versant",
-           title = "Répartition des bassins versant bretons selon leur taux de drainage")
+         aes(x = (long_topag/1000)/(surface_m/1000000))) + 
+  geom_histogram(fill = "blue") + 
+  scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
+  labs(x = "Taux de drainage du bassin versant (Km/Km²)",
+       y = "Nombre de bassin versant",
+       title = str_wrap("Répartition des bassins versant bretons selon leur taux de drainage", width=60))
 
-histo_classe_tx_drainage_bv
+histo_tx_drainage_bv
 
 ## Bassins versant selon leur taux de drainage ----
 
-histo_classe_tx_drainage_bv_permanent <-
+histo_tx_drainage_bv_permanent <-
   ggplot(data = bv_bretagne_permanent, 
-         aes(x = (long_perma/1000)/(surface_m/1000000))) + geom_histogram() + scale_x_log10() + labs(
-           x = "Taux de drainage du bassin versant (Km/Km²)",
-           y = "Nombre de bassin versant",
-           title = "Répartition des bassins versant bretons selon leur taux de drainage")
+         aes(x = (long_perma/1000)/(surface_m/1000000))) + 
+  geom_histogram(fill = "blue") + 
+  scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
+  labs(x = "Taux de drainage du bassin versant (Km/Km²)",
+       y = "Nombre de bassin versant",
+       title = str_wrap("Répartition des bassins versant bretons selon leur taux de drainage", width=60))
 
-histo_classe_tx_drainage_bv_permanent
+histo_tx_drainage_bv_permanent
 
+# Sauvegarde
 
-
-# variante foireuse
-lineaire_rang %>% 
-  ggplot(data = lineaire_rang,
-         aes(x = StreamOrde, y = long_totale_km)) +
-  geom_bar(fill = "blue") +
-  coord_flip() +
-  labs(x = "Rang de Strahler",
-       y = "Linéaire",
-       title = "Linéaire de réseau hydrographique par rang de Strahler")
+save(troncons_topage, 
+     troncons_topage_strahler,
+     troncons_permanents,
+     troncons_permanents_strahler,
+     lineaire_topage_median_moy_km,
+     lineaire_permanent_median_moy_km,
+     lineaire_topage_rang,
+     lineaire_permanent_rang,
+     bv_bretagne, 
+     bv_bretagne_topage, 
+     bv_bretagne_permanent,
+     bv_median_moy_ha,
+     bv_permanent_median_moy_ha,
+     tx_drainage_median_moy_km_km2,
+     tx_drainage_permanent_median_moy_km_km2,
+     histo_lineaire_rang,
+     histo_lineaire_permanent_rang,
+     histo_surface_bv,
+     histo_surface_bv_permanent,
+     histo_lineaire_bv,
+     histo_lineaire_permanent_bv,
+     histo_tx_drainage_bv,
+     histo_tx_drainage_bv_permanent,
+     file = "outputs/bv_atlas.RData")
