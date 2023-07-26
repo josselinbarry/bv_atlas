@@ -54,7 +54,7 @@ bv_bretagne <- bv_bretagne %>%
 bv_bretagne_topage <- bv_bretagne %>%
   filter(long_topag != 0)
 
-## Filtrer les BV ayant un linéaire permanent ----
+## Filtrer les BV ayant un linéaire hydrographique permanent ----
 
 bv_bretagne_permanent <- bv_bretagne %>%
   filter(long_perma != 0)
@@ -144,7 +144,7 @@ lineaire_topage_median_moy_km <- bv_bretagne_topage %>%
             lineaire_moyen_km = mean(long_topag/1000))
 
 openxlsx::write.xlsx(lineaire_topage_median_moy_km,
-                     file = "outputs/vf/lineaire_topage_median_moyen.xlsx")
+                     file = "outputs/vf/lineaire_topage_total_median_moyen.xlsx")
 
 lineaire_permanent_median_moy_km <- bv_bretagne_permanent %>%
   sf::st_drop_geometry() %>% 
@@ -155,7 +155,7 @@ lineaire_permanent_median_moy_km <- bv_bretagne_permanent %>%
             lineaire_moyen_km = mean(long_perma/1000))
 
 openxlsx::write.xlsx(lineaire_permanent_median_moy_km,
-                     file = "outputs/vf/lineaire_permanent_median_moyen.xlsx")
+                     file = "outputs/vf/lineaire_permanent_total_median_moyen.xlsx")
 
 ## BV moyen et median
 
