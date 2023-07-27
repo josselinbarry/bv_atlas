@@ -40,6 +40,7 @@ troncons_topage <- troncons_topage %>%
 persistance_lineaire_topage <- troncons_topage %>%
   sf::st_drop_geometry() %>% 
   select(CdOH, StreamOrde,longueur_m, Persistanc) %>%
+  filter(StreamOrde != 0) %>%
   as.data.frame() %>%
   group_by(Persistanc, StreamOrde) %>%
   summarise(long_totale_m = sum(longueur_m), na.rm = T) %>%
@@ -212,7 +213,8 @@ histo_lineaire_permanent_rang
 histo_lineaire_persistance_rang <- 
   ggplot(data = persistance_lineaire_topage, 
          aes(x = StreamOrde, y = long_totale_km)) +
-  geom_col(aes(fill = Persistanc), width = 0.7) +
+  geom_col(aes(fill = Persistanc), width = 0.7) + 
+  scale_fill_manual(values = c("#d9d9d9", "#18d0f0", "#2374ee", "#fb01ff"))+
   labs(
     x = "Rang de Strahler",
     y = "Linéaire de réseau hydrographique (km)",
@@ -226,7 +228,7 @@ histo_lineaire_persistance_rang
 histo_surface_bv <-
   ggplot(data = bv_bretagne_topage, 
          aes(x = surface_ha)) + 
-  geom_histogram(fill="blue") + 
+  geom_histogram(fill="#2374ee") + 
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + labs(
            x = "Surface du bassin versant (Hectares)",
            y = "Nombre de bassin versant",
@@ -318,6 +320,7 @@ save(troncons_topage,
      tx_drainage_permanent_median_moy_km_km2,
      histo_lineaire_rang,
      histo_lineaire_permanent_rang,
+     histo_lineaire_persistance_rang,
      histo_surface_bv,
      histo_surface_bv_permanent,
      histo_lineaire_bv,
