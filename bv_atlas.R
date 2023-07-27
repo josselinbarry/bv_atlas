@@ -32,8 +32,22 @@ troncons_topage <- troncons_topage %>%
 
 ## Ecarter les tronçons intermittents ----
 
-troncons_permanents <- troncons_topage %>%
-  filter(Persistanc != "intermittent")
+#troncons_permanents <- troncons_topage %>%
+#  filter(Persistanc != "intermittent")
+
+## Anlyser le réseau selon son statut de persistance
+
+persistance_lineaire_topage <- troncons_topage %>%
+  sf::st_drop_geometry() %>% 
+  select(CdOH, StreamOrde,longueur_m, Persistanc) %>%
+  as.data.frame() %>%
+  group_by(Persistanc, StreamOrde) %>%
+  summarise(long_totale_m = sum(longueur_m), na.rm = T) %>%
+  mutate(long_totale_km = long_totale_m/1000,
+         long_totale_prct = long_totale_km*100/47804.4) %>%
+  mutate(long_totale_km = as.numeric(long_totale_km),
+         long_totale_prct = as.numeric(long_totale_prct)) %>%
+  select(StreamOrde, Persistanc, long_totale_km, long_totale_prct)
 
 ## Ecarter les tronçons de rang 0 ----
 
@@ -192,6 +206,20 @@ histo_lineaire_permanent_rang <-
        title = str_wrap("Répartition du réseau hydrographique permanent selon le rang de Strahler", width=40))
 
 histo_lineaire_permanent_rang
+
+## Longueur de Topage selon le rang de Strahler et le niveau de persistance ----
+
+histo_lineaire_persistance_rang <- 
+  ggplot(data = persistance_lineaire_topage, 
+         aes(x = StreamOrde, y = long_totale_km)) +
+  geom_col(aes(fill = Persistanc), width = 0.7) +
+  labs(
+    x = "Rang de Strahler",
+    y = "Linéaire de réseau hydrographique (km)",
+    title = str_wrap("Répartition du linéaire hydrographique selon leur rang de Strahler et leur persistance", width=50))
+
+
+histo_lineaire_persistance_rang
 
 ## Bassins versant selon leur surface ----
 
