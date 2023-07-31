@@ -65,6 +65,28 @@ bv_bretagne <- bv_bretagne %>%
          surface_m = as.numeric(surface_m),
          surface_ha = surface_m/10000)
 
+## Ajouter l'information sur leur persistance ----
+bv_bretagne <- bv_bretagne %>%
+  mutate(long_topag = as.numeric(long_topag),
+       persistance = case_when(
+         long_perma == "0" ~ 'Intermittent',
+         long_perma != "0" ~ 'Permanent'
+       ))
+
+## Ajouter une classe de surface de BV ----
+
+bv_bretagne <- bv_bretagne %>%
+  mutate(surface_ha = as.numeric(surface_ha),
+         classe_surface = case_when(
+           (surface_ha > 0 & surface_ha < 100) ~ 'Moins de 100 ha',
+           (surface_ha >= 100 & surface_ha < 500) ~ 'Entre 100 et 500 ha',
+           (surface_ha >= 500 & surface_ha < 1000) ~ 'Entre 500 et 1000 ha',
+           (surface_ha >= 1000 & surface_ha < 5000) ~ 'Entre 1000 et 5000 ha',
+           (surface_ha >= 5000 & surface_ha < 10000) ~ 'Entre 5000 et 10000 ha',
+           (surface_ha >= 10000 ) ~ 'Plus de 10000 ha',
+           long_perma != "0" ~ 'Permanent'
+         ))
+
  ## Filter les BV ayant un linéaire hydrographique ----
 
 bv_bretagne_topage <- bv_bretagne %>%
@@ -74,6 +96,22 @@ bv_bretagne_topage <- bv_bretagne %>%
 
 bv_bretagne_permanent <- bv_bretagne %>%
   filter(long_perma != 0)
+
+persistance_lineaire_bv <- bv_bretagne_topage %>%
+  sf::st_drop_geometry() %>% 
+  select(IDD, surface_m, long_topag, long_perma) %>%
+  mutate(long_topag = as.numeric(long_topag),
+         persistance = case_when(
+    long_perma == "0" ~ 'Intermittent',
+    long_perma != "0" ~ 'Permanent'
+  )) %>%
+  as.data.frame() %>%
+  group_by(persistance) %>%
+  summarise(surface_totale_m = sum(surface_m), na.rm = T) %>%
+  mutate(surface_totale_km = surface_totale_m/1000000,
+         surface_totale_km = as.numeric(surface_totale_km)) %>%
+  select(persistance, surface_totale_km)
+
 
 # Calcul des indicateurs ----
 
@@ -249,6 +287,21 @@ histo_surface_bv_permanent <-
 
 histo_surface_bv_permanent
 
+## Bassins versant selon leur surface et leur pesistance ----
+# pti bug 'aes(x = ...' ne marche qu'avec les classes de surface (classe_surface) et non avec une distribution des surfaces (surface_ha)
+
+histo_bv_persistance_surface <- 
+  ggplot(data = bv_bretagne_topage, 
+         aes(x = classe_surface, y = sum(surface_ha))) +
+  geom_col(aes(fill = persistance), width = 0.7) + 
+  scale_fill_manual(values = c( "#18d0f0", "#2374ee", "#fb01ff"))+
+  labs(
+    x = "Surface (Ha)",
+    y = "Surfaces cumulées (ha)",
+    title = str_wrap("Surface cumulée de bassins versant selon leur surface et leur persistance", width=50))
+
+histo_bv_persistance_surface
+
 ## Bassins versant selon leur linéaire hydrographique ----
 
 histo_lineaire_bv <-
@@ -301,6 +354,7 @@ histo_tx_drainage_bv_permanent <-
 
 histo_tx_drainage_bv_permanent
 
+
 # Sauvegarde
 
 save(troncons_topage, 
@@ -308,6 +362,7 @@ save(troncons_topage,
      troncons_permanents,
      troncons_permanents_strahler,
      persistance_lineaire_topage,
+     persistance_lineaire_bv,
      lineaire_topage_median_moy_km,
      lineaire_permanent_median_moy_km,
      lineaire_topage_rang,

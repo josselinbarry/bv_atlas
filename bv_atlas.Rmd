@@ -67,6 +67,7 @@ Le rapport de la longueur du réseau hydrographique sur la surface permet de cal
 
 La répartition des 1751 bassins versants selon leur taux de drainage est la suivante :
 
+
 ```{r}
 histo_tx_drainage_bv
 ```
