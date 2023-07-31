@@ -18,23 +18,20 @@ load(file = "outputs/bv_atlas.RData")
 ```
 ## Analyse du réseau hydrographique
 
-Le réseau hydrographique breton issu de la BD Topage couvre un linéaire de 47804 km.
+Le réseau hydrographique breton issu de la BD Topage couvre un linéaire de 47804 km, dont 21 567 km considérés comme permanents.
 
 La distribution de ces tronçons selon l’ordination de Strahler est la suivante :
 ```{r}
-lineaire_topage_rang
+histo_lineaire_persistance_rang
 ```
-Si l'on écarte les tronçons indiqués comme "intermittent", ce linéaire est de 21567 km, qui se distribue selon l’ordination de Strahler de la manière suivante :
-```{r}
-lineaire_permanent_rang
-```
+
 ## Analyse des bassins versant côtiers
 
 Ce linéaire hydrographique complet se réparti en 1751 fleuves côtiers (904 si l'on écarte les tronçons intermittents), de taille et de surface de bassin versant très variables :
 
 ### Répartition selon la surface
 
-Si l'on considère le réseau hydrographique complet, la surface moyenne de ces 1751 bassins versants est de 1705 ha, pour une surface médiane de 70 ha.
+La surface moyenne de ces 1751 bassins versants est de 1705 ha, pour une surface médiane de 70 ha.
 Ils se distribuent de la manière suivante :
 
 ```{r}

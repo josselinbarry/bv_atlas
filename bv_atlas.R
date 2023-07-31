@@ -32,8 +32,8 @@ troncons_topage <- troncons_topage %>%
 
 ## Ecarter les tronçons intermittents ----
 
-#troncons_permanents <- troncons_topage %>%
-#  filter(Persistanc != "intermittent")
+troncons_permanents <- troncons_topage %>%
+  filter(Persistanc != "intermittent")
 
 ## Anlyser le réseau selon son statut de persistance
 
@@ -187,7 +187,7 @@ histo_lineaire_rang <-
            mutate(long_totale_km = as.numeric(long_totale_km)),
          aes(x = StreamOrde,
              y = long_totale_km)) +
-  geom_bar(stat = "identity", fill = "blue") +
+  geom_bar(stat = "identity", fill = "#2374ee") +
   labs(x = "Rang de Strahler",
        y = "Linéaire de réseau hydrographique",
        title = str_wrap("Répartition du réseau hydrographique selon le rang de Strahler", width=40))
@@ -201,7 +201,7 @@ histo_lineaire_permanent_rang <-
            mutate(long_totale_km = as.numeric(long_totale_km)),
          aes(x = StreamOrde,
              y = long_totale_km)) +
-  geom_bar(stat = "identity", fill = "blue") +
+  geom_bar(stat = "identity", fill = "#2374ee") +
   labs(x = "Rang de Strahler",
        y = "Linéaire de réseau hydrographique permanent",
        title = str_wrap("Répartition du réseau hydrographique permanent selon le rang de Strahler", width=40))
@@ -241,7 +241,7 @@ histo_surface_bv
 histo_surface_bv_permanent <-
   ggplot(data = bv_bretagne_permanent, 
          aes(x = surface_ha)) + 
-  geom_histogram(fill = "blue") + 
+  geom_histogram(fill="#2374ee") + 
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Surface du bassin versant (Hectares)",
        y = "Nombre de bassin versant",
@@ -254,7 +254,7 @@ histo_surface_bv_permanent
 histo_lineaire_bv <-
   ggplot(data = bv_bretagne_topage, 
          aes(x = long_topag/1000)) + 
-  geom_histogram(fill = "blue") + 
+  geom_histogram(fill="#2374ee") + 
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Longueur de cours d'eau BD Topage (Km)",
        y = "Nombre de bassin versant",
@@ -267,7 +267,7 @@ histo_lineaire_bv
 histo_lineaire_permanent_bv <-
   ggplot(data = bv_bretagne_permanent, 
          aes(x = long_perma/1000)) + 
-  geom_histogram(fill = "blue") + 
+  geom_histogram(fill="#2374ee") + 
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Longueur de cours d'eau BD Topage (Km)",
        y = "Nombre de bassin versant",
@@ -280,7 +280,7 @@ histo_lineaire_permanent_bv
 histo_tx_drainage_bv <-
   ggplot(data = bv_bretagne_topage, 
          aes(x = (long_topag/1000)/(surface_m/1000000))) + 
-  geom_histogram(fill = "blue") + 
+  geom_histogram(fill="#2374ee") + 
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Taux de drainage du bassin versant (Km/Km²)",
        y = "Nombre de bassin versant",
@@ -293,7 +293,7 @@ histo_tx_drainage_bv
 histo_tx_drainage_bv_permanent <-
   ggplot(data = bv_bretagne_permanent, 
          aes(x = (long_perma/1000)/(surface_m/1000000))) + 
-  geom_histogram(fill = "blue") + 
+  geom_histogram(fill="#2374ee") + 
   scale_x_log10(labels = function(x) format(x, big.mark = " ", scientific = FALSE)) + 
   labs(x = "Taux de drainage du bassin versant (Km/Km²)",
        y = "Nombre de bassin versant",
@@ -307,6 +307,7 @@ save(troncons_topage,
      troncons_topage_strahler,
      troncons_permanents,
      troncons_permanents_strahler,
+     persistance_lineaire_topage,
      lineaire_topage_median_moy_km,
      lineaire_permanent_median_moy_km,
      lineaire_topage_rang,
