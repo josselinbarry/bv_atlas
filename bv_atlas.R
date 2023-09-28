@@ -1,6 +1,9 @@
 ## VERSION FINALISEE AU 20230726
 
 # Library ----
+
+install.packages("maptools")
+
 #library(plyr)
 library(tidyverse)
 # library(lubridate)
@@ -13,14 +16,26 @@ library(tidyverse)
 library(sf)
 #library(stringi)
 
+source(file = "R/functions.R")
 
 # Chargement données----
+
+load(file = "outputs/atlas_bv.RData")
 
 troncons_topage <- 
   sf::read_sf(dsn = "data/TronconHydrographique_BV_cotiers_Bretagne_non_aqueduc_strahler.shp")
 
 bv_bretagne <- 
   sf::read_sf(dsn = "data/bv_20230720_w_indicateurs.shp")
+
+rpg_bzh <- 
+  sf::read_sf(dsn = "data/RPG_2-0__SHP_LAMB93_R53_2021-01-01/PARCELLES_GRAPHIQUES.shp")
+
+rpg_nor <- 
+  sf::read_sf(dsn = "data/RPG_2-0__SHP_LAMB93_R28_2021-01-01/PARCELLES_GRAPHIQUES.shp")
+
+rpg_pdl <- 
+  sf::read_sf(dsn = "data/RPG_2-0__SHP_LAMB93_R52_2021-01-01/PARCELLES_GRAPHIQUES.shp")
 
 # Compléments géographiques----
 
@@ -61,17 +76,10 @@ troncons_permanents_strahler <- troncons_permanents %>%
 ## Ajouter la surface des BV----
 
 bv_bretagne <- bv_bretagne %>%
-  mutate(surface_m = st_area(bv_bretagne),
-         surface_m = as.numeric(surface_m),
-         surface_ha = surface_m/10000)
+  mutate(surface_m2 = st_area(bv_bretagne),
+         surface_m2 = as.numeric(surface_m2),
+         surface_ha = surface_m2/10000)
 
-## Ajouter l'information sur leur persistance ----
-bv_bretagne <- bv_bretagne %>%
-  mutate(long_topag = as.numeric(long_topag),
-       persistance = case_when(
-         long_perma == "0" ~ 'Intermittent',
-         long_perma != "0" ~ 'Permanent'
-       ))
 
 ## Ajouter une classe de surface de BV ----
 
@@ -87,7 +95,65 @@ bv_bretagne <- bv_bretagne %>%
            long_perma != "0" ~ 'Permanent'
          ))
 
- ## Filter les BV ayant un linéaire hydrographique ----
+## Ajouter l'information sur la persistance du réseau hydro ----
+
+bv_bretagne <- bv_bretagne %>%
+  mutate(long_topag = as.numeric(long_topag),
+       persistance = case_when(
+         (long_topag != "0" & long_perma == "0") ~ 'Intermittent',
+         (long_topag != "0" & long_perma != "0") ~ 'Permanent',
+         (long_topag == "0" & long_perma == "0") ~ 'Pas de topage'
+       ))
+
+## Calculer le taux naturel de drainage
+
+bv_bretagne <- bv_bretagne %>%
+  mutate(taux_drainage_km_km2 = as.numeric((long_topag/1000)/(surface_m2/1000000)))
+
+## Calculer le rang de strahler max
+
+bv_strahler_max <- troncons_topage %>%  
+  sf::st_drop_geometry() %>%
+  group_by(bv_IDD, StreamOrde) %>%
+  summarise() %>%
+  mutate(strahler_max = max(StreamOrde)) %>%
+  select(-StreamOrde) %>%
+  unique()
+
+bv_bretagne <- bv_bretagne %>% 
+  dplyr::left_join(bv_strahler_max, 
+                   by = c("IDD" = "bv_IDD"))
+  
+## Calculer la proportion totale, la moyenne et la médiane du parcellaire (RPG)
+
+rpg_bretagne <- 
+  rbind(rpg_bzh, rpg_pdl, rpg_nor)
+
+# tres long
+parcelles_bv <- rpg_bretagne %>%
+  st_intersection(bv_bretagne)
+
+synth_parcelles_bv <- parcelles_bv %>%
+  select(ID_PARCEL, IDD) %>%
+  mutate(surface_m2_rpg = st_area(parcelles_bv),
+         surface_m2_rpg = as.numeric(surface_m2_rpg)) %>%
+  sf::st_drop_geometry() %>%
+  group_by(IDD) %>%
+  summarise(surf_moy_rpg = mean(surface_m2_rpg),
+            surf_med_rpg = median(surface_m2_rpg),
+            surf_tot_rpg = sum(surface_m2_rpg)) %>%
+    unique()
+
+bv_bretagne <- bv_bretagne %>% 
+  dplyr::left_join(synth_parcelles_bv, 
+                   by = c("IDD" = "IDD")) %>%
+  mutate(prct_rpg = surf_tot_rpg * 100 / surface_m2) %>%
+  mutate(surf_moy_rpg = recoder_manquantes_en_zero(surf_moy_rpg),
+         surf_med_rpg = recoder_manquantes_en_zero(surf_med_rpg),
+         surf_tot_rpg = recoder_manquantes_en_zero(surf_tot_rpg),
+         prct_rpg = recoder_manquantes_en_zero(prct_rpg))
+
+## Filter les BV ayant un linéaire hydrographique ----
 
 bv_bretagne_topage <- bv_bretagne %>%
   filter(long_topag != 0)
@@ -111,7 +177,6 @@ persistance_lineaire_bv <- bv_bretagne_topage %>%
   mutate(surface_totale_km = surface_totale_m/1000000,
          surface_totale_km = as.numeric(surface_totale_km)) %>%
   select(persistance, surface_totale_km)
-
 
 # Calcul des indicateurs ----
 
@@ -341,7 +406,18 @@ histo_tx_drainage_bv <-
 
 histo_tx_drainage_bv
 
-## Bassins versant selon leur taux de drainage ----
+## Bassins versant selon le pourcentage de RPG ----
+
+histo_prct_rpg <-
+  ggplot(data = bv_bretagne %>% 
+         filter(persistance != "Pas de topage"),
+         aes(x = prct_rpg)) + 
+  geom_histogram(fill="#2374ee") + 
+  labs(x = "Pourcentage d'occupation surfacique en culture (RPG)",
+       y = "Nombre de bassin versant",
+       title = str_wrap("Répartition des bassins versant bretons selon leur proportion de RPG", width=40))
+
+histo_prct_rpg
 
 histo_tx_drainage_bv_permanent <-
   ggplot(data = bv_bretagne_permanent, 
@@ -355,7 +431,11 @@ histo_tx_drainage_bv_permanent <-
 histo_tx_drainage_bv_permanent
 
 
-# Sauvegarde
+## Export des données ----
+
+sf::write_sf(obj = bv_bretagne, dsn = "data/outputs/bv_bretagne_20230928.gpkg")
+
+# Sauvegarde ----
 
 save(troncons_topage, 
      troncons_topage_strahler,
@@ -367,7 +447,6 @@ save(troncons_topage,
      lineaire_permanent_median_moy_km,
      lineaire_topage_rang,
      lineaire_permanent_rang,
-     bv_bretagne, 
      bv_bretagne_topage, 
      bv_bretagne_permanent,
      bv_median_moy_ha,
@@ -384,3 +463,4 @@ save(troncons_topage,
      histo_tx_drainage_bv,
      histo_tx_drainage_bv_permanent,
      file = "outputs/bv_atlas.RData")
+
