@@ -437,6 +437,11 @@ sf::write_sf(obj = bv_bretagne, dsn = "data/outputs/bv_bretagne_20230928.gpkg")
 
 # Sauvegarde ----
 
+save( bv_bretagne,
+      parcelles_bv,
+      synth_parcelles_bv,
+     file = "outputs/atlas_bv.RData")
+
 save(troncons_topage, 
      troncons_topage_strahler,
      troncons_permanents,
@@ -447,6 +452,7 @@ save(troncons_topage,
      lineaire_permanent_median_moy_km,
      lineaire_topage_rang,
      lineaire_permanent_rang,
+     bv_bretagne, 
      bv_bretagne_topage, 
      bv_bretagne_permanent,
      bv_median_moy_ha,

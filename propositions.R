@@ -14,6 +14,8 @@ histo_classe_surface_bv <-
        y = "Nombre de bassin versant",
        title = "Répartition des bassins versant bretons selon leur taille")
 
+histo_classe_surface_bv
+
 histo_classe_lineaire_bv <-
   ggplot(data = bv_bretagne_topage, 
          aes(x = long_topag/1000)) + geom_histogram() + scale_x_log10() + labs(
@@ -22,5 +24,5 @@ histo_classe_lineaire_bv <-
            title = str_wrap("Répartition des bassins versant bretons selon leur linéaire hydrographique",
                             width = 40))
 
-
+histo_classe_lineaire_bv
 
